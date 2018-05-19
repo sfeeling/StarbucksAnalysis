@@ -68,8 +68,8 @@ class PlotCanvas(FigureCanvas):
                 index = self.index_list[ind["ind"][0]]
                 pos = self.point.get_offsets()[ind["ind"][0]]
                 self.annot.xy = pos
-                text = pd.DataFrame(stb_file.loc[index])  # 返回的文本需要做一个索引的映射
-                #text = marker_label[index]
+                # text = pd.DataFrame(stb_file.loc[index])  # 返回的文本需要做一个索引的映射
+                text = marker_label[index]
                 self.annot.set_text(text)
                 self.annot.get_bbox_patch().set_alpha(0.8)
 
@@ -77,9 +77,7 @@ class PlotCanvas(FigureCanvas):
                 if event.inaxes == self.axes and self.point is not None:
                     cont, ind = self.point.contains(event)
                     if cont:
-                        if self.ind is not ind:
-                            self.ind = ind
-                            update_annot(self.ind)
+                        update_annot(ind)
                         self.annot.set_visible(True)
                         self.fig.canvas.draw_idle()
                     else:

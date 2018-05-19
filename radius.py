@@ -1,4 +1,3 @@
-import heapq
 import pandas as pd
 import calculate_distance as cd
 from csv_process import DataProcess

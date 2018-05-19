@@ -19,6 +19,17 @@ class TopK:
         self._lon = list_str_to_float(self._dp.lon())
         self._lat = list_str_to_float(self._dp.lat())
 
+        dupdict = {}
+        for item in self._dp.store_number():
+            if not dupdict.__contains__(item):
+                dupdict[item] = 1
+            else:
+                dupdict[item] += 1
+
+        for k, v in dupdict.items():
+            if v > 1:
+                print(k)
+
         self._index_list = []
         self._top_lon_list = []
         self._top_lat_list = []

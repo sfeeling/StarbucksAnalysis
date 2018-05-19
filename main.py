@@ -7,7 +7,7 @@ import time
 from plot_canvas import PlotCanvas
 from input_wid import InputWid
 
-radius_topk_canvas = True
+topk_canvas = True
 
 
 class App(QMainWindow):
@@ -29,7 +29,7 @@ class App(QMainWindow):
         self.m = PlotCanvas(self, width=8, height=6)
         self.m.move(200, 0)
 
-        if radius_topk_canvas:
+        if topk_canvas:
             self.input_lon = InputWid(self, 'Lon:', '输入区间为[-180,180]')
             self.input_lon.set_location(0, 50)
             self.input_lon.connect(self.text_changed)

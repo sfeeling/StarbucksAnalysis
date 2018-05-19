@@ -1,19 +1,7 @@
-import pandas as pd
+str1 = 'hello'
 
-df = pd.read_csv('directory.csv')
-timezone = df['Timezone'].tolist()
+str2 = 'h'
+str3 = 'f'
 
-time_dict = {}
-
-for item in timezone:
-    if not time_dict.__contains__(item.split()[0]):
-        time_dict[item.split()[0]] = 1
-    else:
-        time_dict[item.split()[0]] += 1
-
-count = []
-for item in time_dict:
-    count.append(time_dict[item])
-
-print(time_dict.keys())
-print(count)
+if str1.find(str2) != -1:
+    print(str2)

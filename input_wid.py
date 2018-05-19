@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QLineEdit, QLabel
 from PyQt5.QtCore import Qt
 
+
 class InputWid:
 
     def __init__(self, parent=None, header='', warning=''):

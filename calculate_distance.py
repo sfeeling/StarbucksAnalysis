@@ -10,11 +10,4 @@ def haversine(lon1,lat1,lon2,lat2):
     r = 6371
     return c * r #单位千米
 
-'''
-lon1,lat1 = (22.599578, 113.973129) #深圳野生动物园(起点）
-lon2,lat2 = (22.6986848, 114.3311032) #深圳坪山站 (百度地图测距：38.3km)
-d2 = haversine(lon1,lat1,lon2,lat2)
-print(d2)
-'''
-
 

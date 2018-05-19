@@ -1,91 +1,58 @@
 import heapq
-import time
 import pandas as pd
 import calculate_distance as cd
+from csv_process import DataProcess
 
-# top-k查询
 
-# 输入经纬度和k值
-# while 1:
-#     try:
-#         lon1 = float(input('enter lon:'))
-#         if not -180 <= lon1 <= 180:
-#             continue
-#         lat1 = float(input('enter lat:'))
-#         if not -90 <= lat1 <= 90:
-#             continue
-#         k = int(input('enter the value of k:'))
-#         break
-#     except ValueError as e:
-#         print(e)
-#lon1 = float(input('enter lon:'))
-#lat1 = float(input('enter lat:'))
-#k = int(input('enter the value of k:'))
+def list_str_to_float(str_list):
+    float_list = []
+    for item in str_list:
+        float_list.append(float(item))
+    return float_list
 
-# 记录开始时间
-
-# df = pd.read_csv('directory.csv')
-# 创建列表，列表的元素为dict
-
-# start = time.clock()
-# distanceList = []
-# for index in df.index:
-#     distance = {}
-#     lon2 = float(df.loc[index,'Longitude'])
-#     lat2 = float(df.loc[index,'Latitude'])
-#     dis = cd.haversine(lon1,lat1,lon2,lat2)
-#     # 设置字典的key-value
-#     distance['index'] = index
-#     distance['distance'] = dis
-#
-#     distanceList.append(distance)
-#
-# smallestList = heapq.nsmallest(k, distanceList, key=lambda s: s['distance'])
-# end = time.clock()  # 记录结束时间
-# for item in smallestList:
-#     print(item)  # item是字典，item['index']是对应的索引
-# print("Running time : %s Seconds" % (end-start))
 
 class TopK:
 
     def __init__(self):
-        self.df = pd.read_csv('directory.csv')
-        self.top_index_list = []
-        self.top_lon_list = []
-        self.top_lat_list = []
+        self._df = pd.read_csv('directory.csv')
+        self._dp = DataProcess()
+        self._lon = list_str_to_float(self._dp.lon())
+        self._lat = list_str_to_float(self._dp.lat())
 
-    def set_value(self, klon, klat, k):
-        self.top_index_list.clear()
-        self.top_lon_list.clear()
-        self.top_lat_list.clear()
-        start = time.clock()
-        distanceList = []
+        self._index_list = []
+        self._top_lon_list = []
+        self._top_lat_list = []
 
-        for index in self.df.index:
+    def set_values(self, klon, klat, k):
+        self._index_list.clear()
+        self._top_lon_list.clear()
+        self._top_lat_list.clear()
+        distance_list = []
+
+        for index in self._df.index:
             distance = {}
-            lon2 = float(self.df.loc[index, 'Longitude'])
-            lat2 = float(self.df.loc[index, 'Latitude'])
-            dis = cd.haversine(klon, klat, lon2, lat2)
+            lon = self._lon[index]
+            lat = self._lat[index]
+            dis = cd.haversine(klon, klat, lon, lat)
+
             # 设置字典的key-value
             distance['index'] = index
             distance['distance'] = dis
-            distance['Longitude'] = lon2
-            distance['Latitude'] = lat2
 
-            distanceList.append(distance)
+            distance_list.append(distance)
 
-        smallestList = heapq.nsmallest(k, distanceList, key=lambda s: s['distance'])
-        end = time.clock()  # 记录结束时间
-        for item in smallestList:
-            self.top_index_list.append(item['index'])
-            self.top_lon_list.append(item['Longitude'])
-            self.top_lat_list.append(item['Latitude'])
+        smallest_list = heapq.nsmallest(k, distance_list, key=lambda s: s['distance'])
+        for item in smallest_list:
+            index = item['index']
+            self._index_list.append(index)
+            self._top_lon_list.append(self._lon[index])
+            self._top_lat_list.append(self._lat[index])
 
-    def get_top_index_list(self):
-        return self.top_index_list
+    def index_list(self):
+        return self._index_list
 
-    def get_top_lon_list(self):
-        return self.top_lon_list
+    def top_lon_list(self):
+        return self._top_lon_list
 
-    def get_top_lat_list(self):
-        return self.top_lat_list
+    def top_lat_list(self):
+        return self._top_lat_list

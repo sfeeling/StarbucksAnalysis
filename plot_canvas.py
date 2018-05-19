@@ -12,19 +12,21 @@ from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 from geonamescache import GeonamesCache
 import matplotlib.colors as colors
-from top_k import TopK
 
+from top_k import TopK
 from csv_process import DataProcess
+from radius import Radius
 
 plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
 plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 
 stb_file = pd.read_csv('directory.csv')
-csv_data = DataProcess('directory.csv')  # 读取文件
-country_codes = csv_data.col_list('Country')
-lon = csv_data.col_list('Longitude') # 经度列表
-lat = csv_data.col_list('Latitude')  # 纬度列表
-timezone = csv_data.col_list('Timezone')  # 时区列表
+dp = DataProcess()  # 读取文件
+country_codes = dp.country()
+lon = dp.lon() # 经度列表
+lat = dp.lat()  # 纬度列表
+timezone = dp.timezone()  # 时区列表
+marker_label = dp.label()
 
 
 class PlotCanvas(FigureCanvas):
@@ -35,10 +37,17 @@ class PlotCanvas(FigureCanvas):
         self.setParent(parent)
         self.axes = self.fig.add_subplot(111)
         self.point = None
+
         self.top_k = TopK()
-        self.top_index_list = []
+        self.index_list = []
         self.top_lon_list = []
         self.top_lat_list = []
+
+        self.radius = Radius()
+        self.radius_lon_list = []
+        self.radius_lat_list = []
+
+        self.ind = None
 
         # top-k
         if 1:
@@ -50,35 +59,37 @@ class PlotCanvas(FigureCanvas):
             self.m.drawcountries(linewidth=0.5, color='k')
             self.m.drawmapboundary(fill_color='#A0CFDF')
 
-
-
-            annot = self.axes.annotate("", xy=(0, 0), xytext=(20, 20), textcoords="offset points",
+            self.annot = self.axes.annotate("", xy=(0, 0), xytext=(20, 20), textcoords="offset points",
                                        bbox=dict(boxstyle="round", fc="w"),
                                        arrowprops=dict(arrowstyle="->"))
-            annot.set_visible(False)
+            self.annot.set_visible(False)
 
             def update_annot(ind):
-
+                index = self.index_list[ind["ind"][0]]
                 pos = self.point.get_offsets()[ind["ind"][0]]
-                annot.xy = pos
-                text = pd.DataFrame(stb_file.loc[self.top_index_list[ind["ind"][0]]])  # 返回的文本需要做一个索引的映射
-                annot.set_text(text)
-                annot.get_bbox_patch().set_alpha(0.8)
+                self.annot.xy = pos
+                text = pd.DataFrame(stb_file.loc[index])  # 返回的文本需要做一个索引的映射
+                #text = marker_label[index]
+                self.annot.set_text(text)
+                self.annot.get_bbox_patch().set_alpha(0.8)
 
             def hover(event):
-                vis = annot.get_visible()
-                if event.inaxes == self.axes and not self.point == None :
+                if event.inaxes == self.axes and self.point is not None:
                     cont, ind = self.point.contains(event)
                     if cont:
-                        update_annot(ind)
-                        annot.set_visible(True)
+                        if self.ind is not ind:
+                            self.ind = ind
+                            update_annot(self.ind)
+                        self.annot.set_visible(True)
                         self.fig.canvas.draw_idle()
                     else:
+                        vis = self.annot.get_visible()
                         if vis:
-                            annot.set_visible(False)
+                            self.annot.set_visible(False)
                             self.fig.canvas.draw_idle()
 
             self.fig.canvas.mpl_connect("motion_notify_event", hover)
+
 
             self.axes.set_title('top-k')
             self.axes.title.set_y(1.05)
@@ -128,30 +139,30 @@ class PlotCanvas(FigureCanvas):
             self.point = self.m.scatter(xpt, ypt, marker='o', s=3, c=label, cmap=colormap(), zorder=1)
             self.point.set_visible(True)
 
-            annot = self.axes.annotate("", xy=(0, 0), xytext=(20, 20), textcoords="offset points",
+            self.annot = self.axes.annotate("", xy=(0, 0), xytext=(20, 20), textcoords="offset points",
                                        bbox=dict(boxstyle="round", fc="w"),
                                        arrowprops=dict(arrowstyle="->"))
-            annot.set_visible(False)
+            self.annot.set_visible(False)
 
             def update_annot(ind):
 
                 pos = self.point.get_offsets()[ind["ind"][0]]
-                annot.xy = pos
+                self.annot.xy = pos
                 text = pd.DataFrame(stb_file.loc[ind["ind"][0]])
-                annot.set_text(text)
-                annot.get_bbox_patch().set_alpha(0.8)
+                self.annot.set_text(text)
+                self.annot.get_bbox_patch().set_alpha(0.8)
 
             def hover(event):
-                vis = annot.get_visible()
+                vis = self.annot.get_visible()
                 if event.inaxes == self.axes:
                     cont, ind = self.point.contains(event)
                     if cont:
                         update_annot(ind)
-                        annot.set_visible(True)
+                        self.annot.set_visible(True)
                         self.fig.canvas.draw_idle()
                     else:
                         if vis:
-                            annot.set_visible(False)
+                            self.annot.set_visible(False)
                             self.fig.canvas.draw_idle()
 
             self.fig.canvas.mpl_connect("motion_notify_event", hover)
@@ -242,17 +253,29 @@ class PlotCanvas(FigureCanvas):
         self.fig.canvas.draw_idle()
 
     def show_top_k(self, klon, klat, k):
-        self.top_index_list.clear()
+        self.index_list.clear()
         self.top_lon_list.clear()
         self.top_lat_list.clear()
 
-        self.top_k.set_value(klon, klat, k)
-        self.top_index_list = self.top_k.get_top_index_list()
-        self.top_lon_list = self.top_k.get_top_lon_list()
-        self.top_lat_list = self.top_k.get_top_lat_list()
+        self.top_k.set_values(klon, klat, k)
+        self.index_list = self.top_k.index_list()
+        self.top_lon_list = self.top_k.top_lon_list()
+        self.top_lat_list = self.top_k.top_lat_list()
 
         xpt, ypt = self.m(self.top_lon_list, self.top_lat_list)  # 把经纬度转换为x, y坐标，因为图像输出需要用到坐标
         self.point = None
         self.point = self.m.scatter(xpt, ypt, marker='o', s=3, color='#1F77B4')
 
+    def show_radius(self, rlon, rlat, radius):
+        self.index_list.clear()
+        self.radius_lon_list.clear()
+        self.radius_lat_list.clear()
 
+        self.radius.set_values(rlon, rlat, radius)
+        self.index_list = self.radius.index_list()
+        self.radius_lon_list = self.radius.radius_lon_list()
+        self.radius_lat_list = self.radius.radius_lat_list()
+
+        xpt, ypt = self.m(self.radius_lon_list, self.radius_lat_list)
+        self.point = None
+        self.point = self.m.scatter(xpt, ypt, marker='o', s=3, color='#1F77B4')

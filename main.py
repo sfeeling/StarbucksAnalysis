@@ -42,6 +42,10 @@ class App(QMainWindow):
             self.input_k.set_location(0, 190)
             self.input_k.connect(self.text_changed)
 
+            self.input_word = InputWid(self, '关键字:')
+            self.input_word.set_location(0, 260)
+
+
             self.input_radius = InputWid(self, 'Range:')
             self.input_radius.set_location(0, 500)
 
@@ -79,11 +83,12 @@ class App(QMainWindow):
         lon = float(self.input_lon.text())
         lat = float(self.input_lat.text())
         k = int(self.input_k.text())
+        word = self.input_word.text()
         if lon >= -180 and lon <= 180 and lat >= -90 and lat <= 90 and k >= 1 and k <= 25600:
             start = time.clock()
-            if not self.m.get_point() == None:
+            if self.m.get_point() is not None:
                 self.m.get_point().set_visible(False)
-            self.m.show_top_k(lon, lat, k)
+            self.m.show_top_k(lon, lat, k, word)
             self.m.get_point().set_visible(True)
             self.m.refresh()
             end = time.clock()
@@ -130,7 +135,7 @@ class App(QMainWindow):
                 start = time.clock()
                 if self.m.get_point() is not None:
                     self.m.get_point().set_visible(False)
-                self.m.show_top_k(lon, lat, k)
+                self.m.show_top_k(lon, lat, k, '')
                 # self.m.refresh()
                 end = time.clock()
                 delay = round(end - start, 3)

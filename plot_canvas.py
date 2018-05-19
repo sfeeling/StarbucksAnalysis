@@ -40,14 +40,11 @@ class PlotCanvas(FigureCanvas):
 
         self.top_k = TopK()
         self.index_list = []
-        self.top_lon_list = []
-        self.top_lat_list = []
+        self.lon_list = []
+        self.lat_list = []
 
         self.radius = Radius()
-        self.radius_lon_list = []
-        self.radius_lat_list = []
 
-        self.ind = None
 
         # top-k
         if 1:
@@ -88,8 +85,7 @@ class PlotCanvas(FigureCanvas):
 
             self.fig.canvas.mpl_connect("motion_notify_event", hover)
 
-
-            self.axes.set_title('top-k')
+            self.axes.set_title('门店分布')
             self.axes.title.set_y(1.05)
 
         # 时区
@@ -250,30 +246,30 @@ class PlotCanvas(FigureCanvas):
     def refresh(self):
         self.fig.canvas.draw_idle()
 
-    def show_top_k(self, klon, klat, k):
+    def show_top_k(self, klon, klat, k, word):
         self.index_list.clear()
-        self.top_lon_list.clear()
-        self.top_lat_list.clear()
+        self.lon_list.clear()
+        self.lat_list.clear()
 
-        self.top_k.set_values(klon, klat, k)
+        self.top_k.set_values(klon, klat, k, word)
         self.index_list = self.top_k.index_list()
-        self.top_lon_list = self.top_k.top_lon_list()
-        self.top_lat_list = self.top_k.top_lat_list()
+        self.lon_list = self.top_k.top_lon_list()
+        self.lat_list = self.top_k.top_lat_list()
 
-        xpt, ypt = self.m(self.top_lon_list, self.top_lat_list)  # 把经纬度转换为x, y坐标，因为图像输出需要用到坐标
+        xpt, ypt = self.m(self.lon_list, self.lat_list)  # 把经纬度转换为x, y坐标，因为图像输出需要用到坐标
         self.point = None
         self.point = self.m.scatter(xpt, ypt, marker='o', s=3, color='#1F77B4')
 
     def show_radius(self, rlon, rlat, radius):
         self.index_list.clear()
-        self.radius_lon_list.clear()
-        self.radius_lat_list.clear()
+        self.lon_list.clear()
+        self.lat_list.clear()
 
         self.radius.set_values(rlon, rlat, radius)
         self.index_list = self.radius.index_list()
-        self.radius_lon_list = self.radius.radius_lon_list()
-        self.radius_lat_list = self.radius.radius_lat_list()
+        self.lon_list = self.radius.radius_lon_list()
+        self.lat_list = self.radius.radius_lat_list()
 
-        xpt, ypt = self.m(self.radius_lon_list, self.radius_lat_list)
+        xpt, ypt = self.m(self.lon_list, self.lat_list)
         self.point = None
         self.point = self.m.scatter(xpt, ypt, marker='o', s=3, color='#1F77B4')

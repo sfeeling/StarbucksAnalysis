@@ -18,19 +18,33 @@ class DataProcess:
         self._state = self._csv_file['State/Province'].tolist()
         self._postcode = self._csv_file['Postcode'].tolist()
         self._phone = self._csv_file['Phone Number'].tolist()
+        self._count = len(self._store_name)
 
         self._label = []
         for index in self._csv_file.index:
-            self._label.append('Lon: ' + str(self._lon[index]) + '    Lat: ' + str(self._lat[index]) + '\n'
+            self._label.append(str(self._store_name[index]) + '\n'
+                               + str(self._street[index]) + '\n'
                                + 'Country: ' + str(self._country[index]) + '\n'
                                + 'State: ' + str(self._state[index]) + '\n'
-                               + 'City: ' + str(self._city[index]))
+                               + 'City: ' + str(self._city[index]) + '\n'
+                               + 'Lon: ' + str(self._lon[index]) + '  Lat: ' + str(self._lat[index]))
 
-    def col_list(self, col):
-        return self._csv_file[col].tolist()
+        self._word = []
+        for index in self._csv_file.index:
+            self._word.append(str(self._store_name[index]) + ' '
+                               + str(self._street[index]) + ' '
+                               + str(self._country[index]) + ' '
+                               + str(self._state[index]) + ' '
+                               + str(self._city[index]))
+
+    def count(self):
+        return self._count
 
     def label(self):
         return self._label
+
+    def word(self):
+        return self._word
 
     def lon(self):
         return self._lon
@@ -54,7 +68,7 @@ class DataProcess:
         return self._owner
 
     def street(self):
-        return self._street()
+        return self._street
 
     def city(self):
         return self._city

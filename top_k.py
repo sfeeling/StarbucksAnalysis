@@ -1,5 +1,7 @@
+import sys
 import heapq
 import pandas as pd
+import editdistance
 import calculate_distance as cd
 from csv_process import DataProcess
 
@@ -45,7 +47,6 @@ class TopK:
             # 设置字典的key-value
             distance['index'] = index
             distance['distance'] = dis
-
             distance_list.append(distance)
 
         smallest_list = heapq.nsmallest(k, distance_list, key=lambda s: s['distance'])
@@ -57,14 +58,28 @@ class TopK:
 
     def word_topk_prs(self, klon, klat, k, word):
         matched_list = []
-        similar_list = []
+        sim_list = []
         matched = False
         for index in self._df.index:
             if self._word[index].find(word) != -1:
                 matched_list.append(index)
                 matched = True
             elif not matched:
-                i = 1
+                sim_dict = {}
+                edit_dis = sys.maxsize
+                for item in self._word[index].split():
+                    tmp_dis = editdistance.eval(item, word)
+                    if tmp_dis < edit_dis:
+                        edit_dis = tmp_dis
+
+                dis = cd.haversine(klon, klat, self._lon[index], self._lat[index])
+
+                sim_dict['index'] = index
+                sim_dict['edit_dis'] = edit_dis
+                sim_dict['dis'] = dis
+                sim_list.append(sim_dict)
+
+
 
         distance_list = []
         if matched:
@@ -85,6 +100,14 @@ class TopK:
                 self._index_list.append(index)
                 self._top_lon_list.append(self._lon[index])
                 self._top_lat_list.append(self._lat[index])
+        else:
+            most_similar_list = heapq.nsmallest(k, sim_list, key=lambda s: s['edit_dis'] + s['dis'] / 100000)
+            for item in most_similar_list:
+                index = item['index']
+                self._index_list.append(index)
+                self._top_lon_list.append(self._lon[index])
+                self._top_lat_list.append(self._lat[index])
+
 
     def index_list(self):
         return self._index_list

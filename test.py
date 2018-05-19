@@ -1,10 +1,6 @@
-str1 = 'hello'
+import heapq
 
-str2 = 'h'
-str3 = ''
+a = [(3, 5), (3, 4), (5, 5), (5, 1)]
 
-if str1.find(str2) != -1:
-    print(str2)
-
-if not str3:
-    print('something')
+s_list =heapq.nsmallest(5, a, key=lambda x: x[0] + x[1] / 100)
+print(s_list)

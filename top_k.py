@@ -71,9 +71,7 @@ class TopK:
                     tmp_dis = editdistance.eval(item, word)
                     if tmp_dis < edit_dis:
                         edit_dis = tmp_dis
-
                 dis = cd.haversine(klon, klat, self._lon[index], self._lat[index])
-
                 sim_dict['index'] = index
                 sim_dict['edit_dis'] = edit_dis
                 sim_dict['dis'] = dis

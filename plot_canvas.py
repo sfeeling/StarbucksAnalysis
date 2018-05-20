@@ -56,7 +56,7 @@ class PlotCanvas(FigureCanvas):
             self.m.drawcountries(linewidth=0.5, color='k')
             self.m.drawmapboundary(fill_color='#A0CFDF')
 
-            self.annot = self.axes.annotate("", xy=(0, 0), xytext=(20, 20), textcoords="offset points",
+            self.annot = self.axes.annotate("", xy=(0, 0), xytext=(-50, 20), textcoords="offset points",
                                        bbox=dict(boxstyle="round", fc="w"),
                                        arrowprops=dict(arrowstyle="->"))
             self.annot.set_visible(False)

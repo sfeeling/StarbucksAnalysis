@@ -44,30 +44,31 @@ class App(QMainWindow):
 
             self.input_word = InputWid(self, '关键字:')
             self.input_word.set_location(0, 260)
-
+            self.input_word.connect(self.text_changed)
 
             self.input_radius = InputWid(self, 'Range:')
-            self.input_radius.set_location(0, 500)
+            self.input_radius.set_location(0, 330)
+            self.input_radius.connect(self.text_changed)
 
-            self.button_check = QPushButton('查询', self)
-            self.button_check.move(20, 350)
+            self.button_check = QPushButton('top-k', self)
+            self.button_check.move(20, 420)
             self.button_check.setFixedWidth(70)
             self.button_check.clicked.connect(self.button_check_on_click)
 
-            self.button_k = QPushButton('展示', self)
-            self.button_k.move(110, 350)
-            self.button_k.setFixedWidth(70)
-            self.button_k.clicked.connect(self.button_k_on_click)
+            # self.button_k = QPushButton('展示', self)
+            # self.button_k.move(110, 420)
+            # self.button_k.setFixedWidth(70)
+            # self.button_k.clicked.connect(self.button_k_on_click)
+
+            self.button_radius = QPushButton('Range', self)
+            self.button_radius.move(110, 420)
+            self.button_radius.setFixedWidth(70)
+            self.button_radius.clicked.connect(self.button_radius_on_click)
 
             self.lbl_delay = QLabel('此次查询时延为', self)
             self.lbl_delay.setFixedWidth(140)
-            self.lbl_delay.move(20, 390)
+            self.lbl_delay.move(20, 460)
             self.lbl_delay.hide()
-
-            self.button_radius = QPushButton('Range查询', self)
-            self.button_radius.move(110, 550)
-            self.button_radius.setFixedWidth(70)
-            self.button_radius.clicked.connect(self.button_radius_on_click)
 
         self.show()
 
@@ -119,6 +120,37 @@ class App(QMainWindow):
             delay = round(end - start, 3)
             self.lbl_delay.setText('此次查询时延为' + str(delay) + '秒')
             self.lbl_delay.show()
+
+    @pyqtSlot()
+    def button_radius_delay_on_click(self):
+        x = []
+        y = []
+
+        lon = float(self.input_lon.text())
+        lat = float(self.input_lat.text())
+
+        radius = 1000
+        while radius <= 20000:
+            if lon >= -180 and lon <= 180 and lat >= -90 and lat <= 90:
+                start = time.clock()
+                if self.m.get_point() is not None:
+                    self.m.get_point().set_visible(False)
+                self.m.show_radius(lon, lat, radius)
+                # self.m.refresh()
+                end = time.clock()
+                delay = round(end - start, 3)
+                x.append(radius)
+                y.append(delay)
+                radius += 1000
+
+        plt.figure('range-时延变化图')
+        plt.scatter(x, y, color='k', s=25, marker="o")
+
+        plt.xlabel('range/千米')
+        plt.ylabel('时延/秒')
+        plt.title('Lon: ' + self.input_lon.text() + '    Lat: ' + self.input_lat.text())
+        plt.legend()
+        plt.show()
 
     @pyqtSlot()
     def button_k_on_click(self):

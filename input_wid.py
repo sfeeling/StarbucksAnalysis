@@ -34,6 +34,18 @@ class InputWid:
     def set_warning(self, warning):
         self.warning.setText(warning)
 
+    def reset(self):
+        self.content.setText('')
+
+    def show(self):
+        self.header.show()
+        self.content.show()
+
+    def hide(self):
+        self.header.hide()
+        self.content.hide()
+        self.warning.hide()
+
     def show_warning(self):
         self.warning.show()
 

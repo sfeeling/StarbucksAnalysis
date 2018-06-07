@@ -28,10 +28,15 @@ lat = dp.lat()  # 纬度列表
 timezone = dp.timezone()  # 时区列表
 marker_label = dp.label()
 
+class ViewOption:
+    QUERY = 0
+    DESTINY = 1
+    TIMEZONE = 2
+
 
 class PlotCanvas(FigureCanvas):
 
-    def __init__(self, parent=None, width=4, height=3):
+    def __init__(self, parent=None, width=4, height=3, view_option=ViewOption.QUERY):
         self.fig = Figure(figsize=(width, height), dpi=100)
         FigureCanvas.__init__(self, self.fig)
         self.setParent(parent)
@@ -45,9 +50,10 @@ class PlotCanvas(FigureCanvas):
 
         self.radius = Radius()
 
+        self.view_option = view_option
 
-        # top-k
-        if 1:
+        # 查询
+        if self.view_option == ViewOption.QUERY:
             self.m = Basemap(ax=self.axes, projection='mill', area_thresh=10000, llcrnrlat=-65, llcrnrlon=-180, urcrnrlat=80,
                         urcrnrlon=180,
                         resolution='c')
@@ -85,11 +91,11 @@ class PlotCanvas(FigureCanvas):
 
             self.fig.canvas.mpl_connect("motion_notify_event", hover)
 
-            self.axes.set_title('门店分布')
+            self.axes.set_title('店铺查询')
             self.axes.title.set_y(1.05)
 
         # 时区
-        if 0:
+        if self.view_option == ViewOption.TIMEZONE:
             self.m = Basemap(ax=self.axes, projection='mill', area_thresh=10000, llcrnrlat=-65, llcrnrlon=-180, urcrnrlat=80,
                         urcrnrlon=180,
                         resolution='c')
@@ -133,16 +139,16 @@ class PlotCanvas(FigureCanvas):
             self.point = self.m.scatter(xpt, ypt, marker='o', s=3, c=label, cmap=colormap(), zorder=1)
             self.point.set_visible(True)
 
-            self.annot = self.axes.annotate("", xy=(0, 0), xytext=(20, 20), textcoords="offset points",
+            self.annot = self.axes.annotate("", xy=(0, 0), xytext=(-50, 20), textcoords="offset points",
                                        bbox=dict(boxstyle="round", fc="w"),
                                        arrowprops=dict(arrowstyle="->"))
             self.annot.set_visible(False)
 
             def update_annot(ind):
-
+                index = ind['ind'][0]
                 pos = self.point.get_offsets()[ind["ind"][0]]
                 self.annot.xy = pos
-                text = pd.DataFrame(stb_file.loc[ind["ind"][0]])
+                text = marker_label[index]
                 self.annot.set_text(text)
                 self.annot.get_bbox_patch().set_alpha(0.8)
 
@@ -173,7 +179,7 @@ class PlotCanvas(FigureCanvas):
             self.axes.title.set_y(1.05)
 
         # 密度
-        if 0:
+        if self.view_option == ViewOption.DESTINY:
             gnc = GeonamesCache()
             countries = gnc.get_countries()
 
@@ -236,6 +242,12 @@ class PlotCanvas(FigureCanvas):
             cbar.ax.tick_params(labelsize=8, labelcolor='#666666')
 
             self.axes.set_title('密度分布')
+
+    def get_view_option(self):
+        return self.view_option
+
+    def get_fig(self):
+        return self.fig
 
     def get_axes(self):
         return self.axes

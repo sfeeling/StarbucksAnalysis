@@ -27,6 +27,7 @@ class DataProcess:
                                + 'Country: ' + str(self._country[index]) + '\n'
                                + 'State: ' + str(self._state[index]) + '\n'
                                + 'City: ' + str(self._city[index]) + '\n'
+                               + 'Contact:' + str(self._phone[index]) + '\n'
                                + 'Lon: ' + str(self._lon[index]) + '  Lat: ' + str(self._lat[index]))
 
         self._word = []

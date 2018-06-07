@@ -1,3 +1,7 @@
+#
+# 对距离进行处理，返回索引列表和经纬度列表
+#
+
 import pandas as pd
 import calculate_distance as cd
 from csv_process import DataProcess

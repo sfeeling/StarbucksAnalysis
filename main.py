@@ -88,7 +88,7 @@ class App(QMainWindow):
         self.lbl_delay.hide()
         # 以上是查询界面的控件
 
-        # 地图列表，保存三种不同的视图，减少切换视图所需的时间
+        # 地图列表，保存三种不同的视图，减少切换视图所需的时间，但是程序初始化时间增加
         self.map_list = []
 
         self.map_query = PlotCanvas(self, width=8, height=6, view_option=ViewOption.QUERY)

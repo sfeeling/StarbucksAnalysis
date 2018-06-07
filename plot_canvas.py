@@ -1,3 +1,7 @@
+#
+# 地图画布，对basemap进行封装，根据视图选项生成不同的map
+#
+
 import pandas as pd
 import matplotlib as mpl
 from matplotlib import cm
@@ -17,8 +21,8 @@ from top_k import TopK
 from csv_process import DataProcess
 from radius import Radius
 
-plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
-plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
+plt.rcParams['font.sans-serif']=['SimHei'] # 用来正常显示中文标签
+plt.rcParams['axes.unicode_minus']=False # 用来正常显示负号
 
 stb_file = pd.read_csv('directory.csv')
 dp = DataProcess()  # 读取文件
@@ -26,8 +30,9 @@ country_codes = dp.country()
 lon = dp.lon() # 经度列表
 lat = dp.lat()  # 纬度列表
 timezone = dp.timezone()  # 时区列表
-marker_label = dp.label()
+marker_label = dp.label() # 选中某个点时显示的信息列表
 
+# 3种视图选项
 class ViewOption:
     QUERY = 0
     DESTINY = 1
@@ -37,23 +42,30 @@ class ViewOption:
 class PlotCanvas(FigureCanvas):
 
     def __init__(self, parent=None, width=4, height=3, view_option=ViewOption.QUERY):
+        # Figure表示一个图，axes相当于子图，一个fig可以有多个axes，在这里只有一个
         self.fig = Figure(figsize=(width, height), dpi=100)
         FigureCanvas.__init__(self, self.fig)
         self.setParent(parent)
-        self.axes = self.fig.add_subplot(111)
-        self.point = None
+        self.axes = self.fig.add_subplot(111)  # 子图
+        self.point = None  # 把查询到的点集初始化为空，方便后续处理
 
+        # top-k相关的类
         self.top_k = TopK()
-        self.index_list = []
+
+        # 以下三个列表只在查询视图中有效，为了实现查询的子集索引到csv文件索引的映射
+        self.index_list = []  # 储存经纬度所对应的csv文件中的索引
         self.lon_list = []
         self.lat_list = []
 
+        # 距离查询相关的类
         self.radius = Radius()
 
+        # 视图选项
         self.view_option = view_option
 
-        # 查询
+        # 查询视图的map
         if self.view_option == ViewOption.QUERY:
+            # 地图
             self.m = Basemap(ax=self.axes, projection='mill', area_thresh=10000, llcrnrlat=-65, llcrnrlon=-180, urcrnrlat=80,
                         urcrnrlon=180,
                         resolution='c')
@@ -62,20 +74,23 @@ class PlotCanvas(FigureCanvas):
             self.m.drawcountries(linewidth=0.5, color='k')
             self.m.drawmapboundary(fill_color='#A0CFDF')
 
+            # 选中某个点后显示的信息提示框
             self.annot = self.axes.annotate("", xy=(0, 0), xytext=(-50, 20), textcoords="offset points",
                                        bbox=dict(boxstyle="round", fc="w"),
                                        arrowprops=dict(arrowstyle="->"))
             self.annot.set_visible(False)
 
+            # 更新信息提示框
             def update_annot(ind):
-                index = self.index_list[ind["ind"][0]]
+                index = self.index_list[ind["ind"][0]]  # 这里返回的是csv中对应经纬度的索引
                 pos = self.point.get_offsets()[ind["ind"][0]]
                 self.annot.xy = pos
-                # text = pd.DataFrame(stb_file.loc[index])  # 返回的文本需要做一个索引的映射
                 text = marker_label[index]
+                # 设置提示文本
                 self.annot.set_text(text)
                 self.annot.get_bbox_patch().set_alpha(0.8)
 
+            # 鼠标移动到某个点的响应函数
             def hover(event):
                 if event.inaxes == self.axes and self.point is not None:
                     cont, ind = self.point.contains(event)
@@ -89,12 +104,13 @@ class PlotCanvas(FigureCanvas):
                             self.annot.set_visible(False)
                             self.fig.canvas.draw_idle()
 
+            # 绑定响应函数
             self.fig.canvas.mpl_connect("motion_notify_event", hover)
 
             self.axes.set_title('店铺查询')
             self.axes.title.set_y(1.05)
 
-        # 时区
+        # 时区视图的map
         if self.view_option == ViewOption.TIMEZONE:
             self.m = Basemap(ax=self.axes, projection='mill', area_thresh=10000, llcrnrlat=-65, llcrnrlon=-180, urcrnrlat=80,
                         urcrnrlon=180,
@@ -105,11 +121,9 @@ class PlotCanvas(FigureCanvas):
             self.m.drawmapboundary(fill_color='#A0CFDF')
 
             zone_dict = {}
-            color_ind = 0  # cnames里的索引
             label = list()
 
             xpt, ypt = self.m(lon, lat)  # 把经纬度转换为x, y坐标，因为图像输出需要用到坐标
-
 
             for item in timezone:
                 tz = item.split()[0]
@@ -178,7 +192,7 @@ class PlotCanvas(FigureCanvas):
             self.axes.set_title('时区分布')
             self.axes.title.set_y(1.05)
 
-        # 密度
+        # 密度视图的map
         if self.view_option == ViewOption.DESTINY:
             gnc = GeonamesCache()
             countries = gnc.get_countries()
@@ -242,6 +256,7 @@ class PlotCanvas(FigureCanvas):
             cbar.ax.tick_params(labelsize=8, labelcolor='#666666')
 
             self.axes.set_title('密度分布')
+            self.axes.title.set_y(1.05)
 
     def get_view_option(self):
         return self.view_option
@@ -255,9 +270,11 @@ class PlotCanvas(FigureCanvas):
     def get_point(self):
         return self.point
 
+    # 重新绘制查询到的点集
     def refresh(self):
         self.fig.canvas.draw_idle()
 
+    # 返回top-k查询的结果
     def show_top_k(self, klon, klat, k, word):
         self.index_list.clear()
         self.lon_list.clear()
@@ -272,6 +289,7 @@ class PlotCanvas(FigureCanvas):
         self.point = None
         self.point = self.m.scatter(xpt, ypt, marker='o', s=3, color='#1F77B4')
 
+    # 返回距离查询的结果
     def show_radius(self, rlon, rlat, radius):
         self.index_list.clear()
         self.lon_list.clear()
@@ -282,6 +300,6 @@ class PlotCanvas(FigureCanvas):
         self.lon_list = self.radius.radius_lon_list()
         self.lat_list = self.radius.radius_lat_list()
 
-        xpt, ypt = self.m(self.lon_list, self.lat_list)
+        xpt, ypt = self.m(self.lon_list, self.lat_list)  # 把经纬度转换为二维坐标x,y
         self.point = None
-        self.point = self.m.scatter(xpt, ypt, marker='o', s=3, color='#1F77B4')
+        self.point = self.m.scatter(xpt, ypt, marker='o', s=3, color='#1F77B4')  # 在相应位置生成点

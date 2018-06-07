@@ -1,3 +1,7 @@
+#
+# 自定义的菜单样式
+#
+
 menubar_style = """
             QMenuBar {
                 background-color: rgb(49,49,49);

@@ -1,3 +1,7 @@
+#
+# 对csv进行处理，得到相应的数据，除了count为int类型，其他数据都是list
+#
+
 import pandas as pd
 
 
@@ -18,6 +22,7 @@ class DataProcess:
         self._state = self._csv_file['State/Province'].tolist()
         self._postcode = self._csv_file['Postcode'].tolist()
         self._phone = self._csv_file['Phone Number'].tolist()
+
         self._count = len(self._store_name)
 
         self._label = []

@@ -1,3 +1,7 @@
+#
+# 输入两点的经纬度，返回实际距离
+#
+
 from math import radians, cos, sin, asin, sqrt
 
 def haversine(lon1,lat1,lon2,lat2):
